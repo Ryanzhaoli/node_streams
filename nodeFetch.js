@@ -1,16 +1,24 @@
-const fetch = require("isomorphic-fetch");
-const { createWriteStream } = require("fs");
+const fs = require("fs");
+const path = require("path");
+const fetch = require("node-fetch");
 
-async function fetchPokemon() {
-  const res = await fetch(
-    "https://raw.githubusercontent.com/Biuni/PokemonGO-Pokedex/master/pokedex.json"
-  );
-  const arrayBuffer = await res.arrayBuffer();
+fetch(
+  "https://raw.githubusercontent.com/Biuni/PokemonGO-Pokedex/master/pokedex.json"
+)
+  .then((res) => res.json())
+  .then((pokemon) => {
+    const jsonData = JSON.stringify(pokemon);
+    const writeStream = fs.createWriteStream(
+      path.join(__dirname, "./pokemon.json")
+    );
+    writeStream.write(jsonData);
 
-  const buffer = Buffer.from(arrayBuffer);
+    writeStream.on("finish", () => {
+      console.log("Pokemon Data was fetched successfully");
+    });
 
-  const writeStream = createWriteStream("./pokemon.json");
-  writeStream.write(buffer);
-}
-
-fetchPokemon();
+    writeStream.end();
+  })
+  .catch((err) => {
+    console.error("Error fetching", err);
+  });
